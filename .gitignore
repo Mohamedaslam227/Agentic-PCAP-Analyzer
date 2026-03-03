@@ -1,0 +1,7 @@
+venv
+STEP-*.md
+STEP-*.log
+__pycache__/
+.env
+logics file structure.txt
+Final Idea.md

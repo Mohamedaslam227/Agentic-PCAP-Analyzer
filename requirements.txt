@@ -1,0 +1,9 @@
+fastapi 
+uvicorn 
+pydantic 
+pydantic-settings 
+python-multipart
+pandas
+redis[hiredis]
+asyncpg 
+python-dotenv

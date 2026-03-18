@@ -5,3 +5,10 @@ __pycache__/
 .env
 logics file structure.txt
 Final Idea.md
+*.pcap
+*.pcapng
+all_fields.txt
+CHANGES.md
+NEXT_STEPS.md
+ROADMAP.md
+RUN.md

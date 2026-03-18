@@ -1,0 +1,32 @@
+# Dockerfile.embedding
+# ──────────────────────────────────────────────────────────────────────────────
+# Build context: the project root (code/)
+#   docker compose -f logics/docker-compose.embedding.yml up -d --build
+#
+# Why a Dockerfile instead of installing at runtime?
+#   - Dependencies are baked into the image layer → container starts in seconds
+#   - Docker layer cache means re-builds only re-install on requirements change
+#   - Reproducible: same image on every machine / CI run
+# ──────────────────────────────────────────────────────────────────────────────
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# ── 1. Install Python dependencies (cached layer) ─────────────────────────────
+#    torch CPU-only wheel keeps the image ~1 GB smaller than the default wheel.
+RUN pip install --no-cache-dir \
+        fastapi \
+        uvicorn \
+        sentence-transformers && \
+    pip install --no-cache-dir \
+        torch \
+        --index-url https://download.pytorch.org/whl/cpu
+
+# ── 2. Copy only the embedding server file ───────────────────────────────────
+#    server.py has zero internal logics/ imports — only fastapi, pydantic,
+#    sentence-transformers, and uvicorn — so this single file is enough.
+COPY logics/embedding/server.py ./server.py
+
+# ── 3. Run the embedding server ───────────────────────────────────────────────
+CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8001", "--workers", "1"]

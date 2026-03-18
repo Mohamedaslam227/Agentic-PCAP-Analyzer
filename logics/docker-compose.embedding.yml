@@ -1,0 +1,41 @@
+# docker-compose.embedding.yml
+# ──────────────────────────────────────────────────────────────────────────────
+# Standalone embedding microservice for the PCAP Analyzer.
+#
+# This container loads the sentence-transformers model ONCE and serves embed
+# requests to the main API workers over HTTP, eliminating cold-start latency.
+#
+# Usage (first time or after code changes):
+#   docker compose -f logics/docker-compose.redis.yml \
+#                  -f logics/docker-compose.embedding.yml up -d --build
+#
+# Subsequent starts (image already built):
+#   docker compose -f logics/docker-compose.redis.yml \
+#                  -f logics/docker-compose.embedding.yml up -d
+#
+# Then set in your .env:
+#   PCAP_EMBEDDING_SERVICE_URL=http://localhost:8001
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  embedding-svc:
+    build:
+      # Build context is the project root so COPY logics/ works inside the
+      # Dockerfile. The Dockerfile itself lives inside logics/.
+      context: ..
+      dockerfile: logics/Dockerfile.embedding
+    container_name: pcap-embedding-svc
+    environment:
+      EMBED_MODEL_NAME: all-MiniLM-L6-v2
+      EMBED_BATCH_SIZE: "256"
+      EMBED_HOST: "0.0.0.0"
+      EMBED_PORT: "8001"
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s   # model loading takes ~10-20 s on first start
+    restart: unless-stopped
